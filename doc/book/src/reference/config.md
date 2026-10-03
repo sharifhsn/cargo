@@ -599,6 +599,35 @@ Available template variables:
 
 For more information see the [build cache documentation](../reference/build-cache.md).
 
+#### `build.artifact-session`
+
+* Type: string
+* Default: a hash of the workspace root
+* Environment: `CARGO_BUILD_ARTIFACT_SESSION`
+
+A persistent name for an [active artifact session](unstable.md#active-artifacts).
+Requires `-Zactive-artifacts`. Sessions sharing a build directory retain their
+successful graphs independently until explicitly released.
+
+#### `build.artifact-configuration`
+
+* Type: string
+* Default: none
+* Environment: `CARGO_BUILD_ARTIFACT_CONFIGURATION`
+
+An additional configuration label for [active artifact retention](unstable.md#active-artifacts).
+Change this label when external inputs should retire all previous operation
+slots after the next successful compilation.
+
+#### `build.artifact-slot`
+
+* Type: string
+* Default: derived from the operation and compiler wrappers
+* Environment: `CARGO_BUILD_ARTIFACT_SLOT`
+
+An explicit operation slot for [active artifact retention](unstable.md#active-artifacts).
+Use separate names to retain multiple target selections for the same operation.
+
 #### `build.rustflags`
 * Type: string or array of strings
 * Default: none

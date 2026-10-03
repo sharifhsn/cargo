@@ -2,6 +2,7 @@
 #![allow(clippy::print_stderr)]
 #![allow(clippy::print_stdout)]
 
+mod active_artifacts;
 mod advanced_env;
 mod alt_registry;
 mod artifact_dep;

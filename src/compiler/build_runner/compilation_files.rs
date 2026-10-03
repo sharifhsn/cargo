@@ -132,6 +132,7 @@ pub struct CompilationFiles<'a, 'gctx> {
     /// include dependencies).
     roots: Vec<Unit>,
     ws: &'a Workspace<'gctx>,
+    active_artifacts: bool,
     /// Metadata hash to use for each unit.
     metas: HashMap<Unit, Metadata>,
     /// For each Unit, a list all files produced.
@@ -179,6 +180,7 @@ impl<'a, 'gctx: 'a> CompilationFiles<'a, 'gctx> {
             .collect();
         CompilationFiles {
             ws: build_runner.bcx.ws,
+            active_artifacts: build_runner.bcx.gctx.cli_unstable().active_artifacts,
             host,
             target,
             export_dir: build_runner.bcx.build_config.export_dir.clone(),
@@ -319,8 +321,18 @@ impl<'a, 'gctx: 'a> CompilationFiles<'a, 'gctx> {
     }
 
     /// Directory where incremental output for the given unit should go.
-    pub fn incremental_dir(&self, unit: &Unit) -> &Path {
-        self.layout(unit.kind).build_dir().incremental()
+    pub fn incremental_dir(&self, unit: &Unit) -> PathBuf {
+        if self.active_artifacts {
+            self.build_unit_lock(unit)
+                .parent()
+                .unwrap()
+                .join("incremental")
+        } else {
+            self.layout(unit.kind)
+                .build_dir()
+                .incremental()
+                .to_path_buf()
+        }
     }
 
     /// Directory where timing output should go.

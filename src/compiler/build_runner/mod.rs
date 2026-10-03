@@ -166,7 +166,15 @@ impl<'a, 'gctx> BuildRunner<'a, 'gctx> {
     ///
     /// [`ops::cargo_compile`]: crate::ops::cargo_compile
     #[tracing::instrument(skip_all)]
-    pub fn compile(mut self, exec: &Arc<dyn Executor>) -> CargoResult<Compilation<'gctx>> {
+    pub fn compile(self, exec: &Arc<dyn Executor>) -> CargoResult<Compilation<'gctx>> {
+        self.compile_with_active_artifacts(exec, None)
+    }
+
+    pub(crate) fn compile_with_active_artifacts(
+        mut self,
+        exec: &Arc<dyn Executor>,
+        mut active_artifacts: Option<super::active_artifacts::ActiveArtifacts>,
+    ) -> CargoResult<Compilation<'gctx>> {
         // A shared lock is held during the duration of the build since rustc
         // needs to read from the `src` cache, and we don't want other
         // commands modifying the `src` cache while it is running.
@@ -178,6 +186,11 @@ impl<'a, 'gctx> BuildRunner<'a, 'gctx> {
         self.lto = super::lto::generate(self.bcx)?;
         self.prepare_units()?;
         self.prepare()?;
+        if let Some(ref mut retention) = active_artifacts {
+            self.compilation.artifact_leases = retention.prepare(&self)?;
+            #[cfg(unix)]
+            self.compilation.inherit_artifact_leases()?;
+        }
         custom_build::build_map(&mut self)?;
         self.check_collisions()?;
         self.compute_metadata_for_doc_units();
@@ -311,6 +324,7 @@ impl<'a, 'gctx> BuildRunner<'a, 'gctx> {
                     .insert(dir.clone().into_path_buf());
             }
         }
+        self.compilation.active_artifacts = active_artifacts;
         Ok(self.compilation)
     }
 

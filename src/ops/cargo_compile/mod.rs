@@ -149,11 +149,14 @@ pub fn compile_with_exec<'a>(
         ws,
         crate::diagnostics::rules::PARSE_PASS_RULES,
     )?;
-    let compilation = compile_ws(ws, options, exec)?;
+    let mut compilation = compile_ws(ws, options, exec)?;
     if ws.gctx().warning_handling()? == WarningHandling::Deny
         && (compilation.lint_warning_count + parse_pass_output.lint_warning_count) > 0
     {
         anyhow::bail!("warnings are denied by `build.warnings` configuration")
+    }
+    if let Some(retention) = compilation.active_artifacts.take() {
+        retention.commit(ws.gctx())?;
     }
     Ok(compilation)
 }
@@ -202,11 +205,16 @@ fn compile_ws<'a>(
         return Compilation::new(&bcx);
     }
     crate::workspace::gc::auto_gc(bcx.gctx);
+    let retention = if options.build_config.dry_run {
+        None
+    } else {
+        crate::compiler::active_artifacts::ActiveArtifacts::begin(&bcx, options)?
+    };
     let build_runner = BuildRunner::new(&bcx)?;
     if options.build_config.dry_run {
         build_runner.dry_run()
     } else {
-        build_runner.compile(exec)
+        build_runner.compile_with_active_artifacts(exec, retention)
     }
 }
 

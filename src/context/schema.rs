@@ -412,6 +412,10 @@ pub struct CargoBuildConfig {
     pub dep_info_basedir: Option<ConfigRelativePath>,
     pub target_dir: Option<ConfigRelativePath>,
     pub build_dir: Option<ConfigRelativePath>,
+    /// Unstable feature `-Zactive-artifacts`.
+    pub artifact_session: Option<String>,
+    pub artifact_configuration: Option<String>,
+    pub artifact_slot: Option<String>,
     pub incremental: Option<bool>,
     pub target: Option<BuildTargetConfig>,
     pub profile: Option<ProfileName>,

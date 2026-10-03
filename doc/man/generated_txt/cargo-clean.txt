@@ -30,6 +30,12 @@ OPTIONS
            anything. Use with --verbose to display the actual files that would
            be deleted.
 
+       --artifact-session name
+           Release a persistent artifact session and collect its inactive build
+           units. Requires -Zactive-artifacts. Other sessions and published
+           outputs retain their backing units. See active artifact retention
+           <https://doc.rust-lang.org/cargo/reference/unstable.html#active-artifacts>.
+
        --doc
            This option will cause cargo clean to remove only the doc directory
            in the target directory.

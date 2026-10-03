@@ -73,6 +73,9 @@ pub struct UnitOutput {
 
 /// A structure returning the result of a compilation.
 pub struct Compilation<'gctx> {
+    /// Keep backing units alive through tests, doctests, and `cargo run`.
+    pub(crate) artifact_leases: Vec<crate::util::flock::FileLock>,
+    pub(crate) active_artifacts: Option<super::active_artifacts::ActiveArtifacts>,
     /// An array of all tests created during this compilation.
     pub tests: Vec<UnitOutput>,
 
@@ -144,6 +147,25 @@ pub struct Compilation<'gctx> {
 }
 
 impl<'gctx> Compilation<'gctx> {
+    /// Retain leases if Cargo is killed while a compiler or executable keeps running.
+    /// Shared locks survive exec through their open file descriptions on Unix.
+    #[cfg(unix)]
+    pub(crate) fn inherit_artifact_leases(&self) -> CargoResult<()> {
+        use std::os::fd::AsRawFd;
+        for lease in &self.artifact_leases {
+            let fd = lease.file().as_raw_fd();
+            // SAFETY: the borrowed File owns a valid fd for both calls. fcntl's
+            // third argument is an integer for F_SETFD.
+            let flags = unsafe { libc::fcntl(fd, libc::F_GETFD) };
+            if flags == -1
+                || unsafe { libc::fcntl(fd, libc::F_SETFD, flags & !libc::FD_CLOEXEC) } == -1
+            {
+                return Err(std::io::Error::last_os_error().into());
+            }
+        }
+        Ok(())
+    }
+
     pub fn new<'a>(bcx: &BuildContext<'a, 'gctx>) -> CargoResult<Compilation<'gctx>> {
         let rustc_process = bcx.rustc().process();
         let primary_rustc_process = bcx.build_config.primary_unit_rustc.clone();
@@ -190,6 +212,8 @@ impl<'gctx> Compilation<'gctx> {
             linkers.insert(kind, target_linker(bcx, kind)?);
         }
         Ok(Compilation {
+            artifact_leases: Vec::new(),
+            active_artifacts: None,
             native_dirs: BTreeSet::new(),
             root_output: HashMap::default(),
             deps_output: HashMap::default(),

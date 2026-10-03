@@ -47,6 +47,12 @@ Displays a summary of what would be deleted without deleting anything.
 Use with `--verbose` to display the actual files that would be deleted.
 {{/option}}
 
+{{#option "`--artifact-session` _name_" }}
+Release a persistent artifact session and collect its inactive build units.
+Requires `-Zactive-artifacts`. Other sessions and published outputs retain their
+backing units. See [active artifact retention](../reference/unstable.html#active-artifacts).
+{{/option}}
+
 {{#option "`--doc`" }}
 This option will cause `cargo clean` to remove only the `doc` directory in
 the target directory.

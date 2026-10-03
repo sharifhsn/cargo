@@ -47,6 +47,13 @@ Use with <code>--verbose</code> to display the actual files that would be delete
 </dd>
 
 
+<dt class="option-term" id="option-cargo-clean---artifact-session"><a class="option-anchor" href="#option-cargo-clean---artifact-session"><code>--artifact-session</code> <em>name</em></a></dt>
+<dd class="option-desc"><p>Release a persistent artifact session and collect its inactive build units.
+Requires <code>-Zactive-artifacts</code>. Other sessions and published outputs retain their
+backing units. See <a href="../reference/unstable.html#active-artifacts">active artifact retention</a>.</p>
+</dd>
+
+
 <dt class="option-term" id="option-cargo-clean---doc"><a class="option-anchor" href="#option-cargo-clean---doc"><code>--doc</code></a></dt>
 <dd class="option-desc"><p>This option will cause <code>cargo clean</code> to remove only the <code>doc</code> directory in
 the target directory.</p>

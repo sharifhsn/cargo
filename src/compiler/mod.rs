@@ -28,6 +28,7 @@
 //!
 //! [`ops::cargo_compile::compile`]: crate::ops::compile
 
+pub(crate) mod active_artifacts;
 pub mod artifact;
 mod build_config;
 pub(crate) mod build_context;

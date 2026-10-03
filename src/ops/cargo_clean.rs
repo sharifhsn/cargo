@@ -812,3 +812,12 @@ impl FileId {
         ))
     }
 }
+
+/// Releases a named active artifact session without discarding published outputs.
+pub fn release_artifact_session(
+    ws: &Workspace<'_>,
+    session: &str,
+    dry_run: bool,
+) -> CargoResult<()> {
+    crate::compiler::active_artifacts::release(ws, session, dry_run)
+}

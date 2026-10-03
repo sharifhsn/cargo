@@ -125,5 +125,16 @@ pub fn run(
 
     gctx.shell().status("Running", process.to_string())?;
 
-    process.exec_replace()
+    if compile.artifact_leases.is_empty() {
+        process.exec_replace()
+    } else {
+        #[cfg(unix)]
+        {
+            process.exec_replace()
+        }
+        #[cfg(not(unix))]
+        {
+            process.exec().map_err(Into::into)
+        }
+    }
 }

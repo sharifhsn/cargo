@@ -80,6 +80,7 @@ Each new feature described below should explain how to use it.
     * [feature-unification](#feature-unification) --- Enable new feature unification modes in workspaces
     * [lockfile-publish-time](#lockfile-publish-time) --- Limit resolver to packages older than the specified time
 * Output behavior
+    * [active-artifacts](#active-artifacts) --- Retain successful build graphs for named sessions and collect inactive configurations.
     * [artifact-dir](#artifact-dir) --- Adds a directory where artifacts are copied to.
     * [Different binary name](#different-binary-name) --- Assign a name to the built binary that is separate from the crate name.
     * [root-dir](#root-dir) --- Controls the root directory relative to which paths are printed
@@ -227,6 +228,63 @@ minimum versions that you are actually using. That is, if Cargo.toml says
 
 Indirect dependencies are resolved as normal so as not to be blocked on their
 minimal version validation.
+
+## active-artifacts
+
+This local experimental feature retains one successful configuration per named
+session. It requires the new build-directory layout and coarse build-directory
+locking. NFS and `-Zfine-grain-locking` are currently unsupported.
+
+```toml
+# .cargo/config.toml
+[unstable]
+active-artifacts = true
+
+[build]
+artifact-session = "agent-a"
+```
+
+Alternatively, pass `-Zactive-artifacts` and
+`--config 'build.artifact-session="agent-a"'` to each Cargo command.
+
+`check`, `build`, `test`, documentation, and compiler wrappers have separate
+operation slots within the session. Repeating them with the same features,
+profile settings, toolchain, and flags keeps their successful graphs warm.
+Cargo preserves its existing reuse between those graphs. The next successful
+command in the same slot replaces its previous graph. A successful configuration
+change replaces all of that session's slots. Failed compilations preserve the
+previous successful configuration.
+
+`build.artifact-configuration` supplies an additional configuration label for
+changes in external inputs such as SDKs. `build.artifact-slot` explicitly names
+an operation slot when multiple target selections should remain warm together.
+
+```console
+cargo +nightly clean -Zactive-artifacts --artifact-session agent-a --dry-run
+cargo +nightly clean -Zactive-artifacts --artifact-session agent-a
+```
+
+Releasing a session removes its cache roots. Published outputs and other
+sessions still pin their backing graphs.
+Compilation records projected output pins before starting jobs, because an output
+may be published before another job or warning validation fails. Failed commands
+conservatively pin both old and projected backing until replacement or removal.
+Collection removes only complete units
+recorded by this feature, including their incremental data. Running tests and
+programs hold execution leases; locked units are retried on subsequent successful
+commands. On Unix, leases survive exec and protect compiler, build-script, and
+test children even if Cargo is killed. On other platforms, `cargo run` waits for its
+child to keep its leases alive.
+Programs launched directly from the build directory do not acquire leases.
+One lease protects the full running graph, avoiding an open descriptor per unit.
+This experiment uses state format version 2; earlier experimental state requires
+a fresh build directory and is rejected before collection.
+
+This is a retention policy, not a byte limit. Live graphs, published debug data,
+older unregistered caches, and temporary overlap while switching configurations
+can still consume substantial space. State is stored under
+`<build-dir>/.cargo-active-artifacts`. Use a dedicated experimental build
+directory when evaluating the feature.
 
 ## artifact-dir
 * Original Issue: [#4875](https://github.com/rust-lang/cargo/issues/4875)

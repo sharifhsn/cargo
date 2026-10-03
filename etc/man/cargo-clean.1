@@ -36,6 +36,13 @@ Displays a summary of what would be deleted without deleting anything.
 Use with \fB\-\-verbose\fR to display the actual files that would be deleted.
 .RE
 .sp
+\fB\-\-artifact\-session\fR \fIname\fR
+.RS 4
+Release a persistent artifact session and collect its inactive build units.
+Requires \fB\-Zactive\-artifacts\fR\&. Other sessions and published outputs retain their
+backing units. See \fIactive artifact retention\fR <https://doc.rust\-lang.org/cargo/reference/unstable.html#active\-artifacts>\&.
+.RE
+.sp
 \fB\-\-doc\fR
 .RS 4
 This option will cause \fBcargo clean\fR to remove only the \fBdoc\fR directory in

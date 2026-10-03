@@ -31,6 +31,21 @@ pub fn cli() -> Command {
         .arg_target_tuple("Target tuple to clean output for")
         .arg_target_dir()
         .arg_manifest_path()
+        .arg(
+            opt(
+                "artifact-session",
+                "Release a retained build session (unstable)",
+            )
+            .value_name("NAME")
+            .conflicts_with_all([
+                "package",
+                "workspace",
+                "release",
+                "profile",
+                "doc",
+                "target",
+            ]),
+        )
         .arg_dry_run("Display what would be deleted without deleting anything")
         .args_conflicts_with_subcommands(true)
         .subcommand(
@@ -149,6 +164,10 @@ pub fn exec(gctx: &mut GlobalContext, args: &ArgMatches) -> CliResult {
     }
 
     let ws = args.workspace(gctx)?;
+    if let Some(session) = args.get_one::<String>("artifact-session") {
+        cargo::ops::release_artifact_session(&ws, session, args.dry_run())?;
+        return Ok(());
+    }
 
     if args.is_present_with_zero_values("package") {
         print_available_packages(&ws)?;

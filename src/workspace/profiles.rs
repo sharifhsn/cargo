@@ -69,6 +69,14 @@ pub struct Profiles {
 }
 
 impl Profiles {
+    /// Stable settings for grouping the usual dev/test (or release/bench) workflow.
+    pub(crate) fn artifact_retention_settings(&self) -> CargoResult<String> {
+        Ok(serde_json::to_string(&(
+            &self.original_profiles,
+            self.incremental,
+        ))?)
+    }
+
     pub fn new(ws: &Workspace<'_>, requested_profile: InternedString) -> CargoResult<Profiles> {
         let gctx = ws.gctx();
         let incremental = match gctx.get_env_os("CARGO_INCREMENTAL") {

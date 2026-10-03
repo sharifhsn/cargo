@@ -880,6 +880,7 @@ unstable_cli_options!(
 
     // All other unstable features.
     // Please keep this list lexicographically ordered.
+    active_artifacts: bool = ("Retain artifacts for active build sessions"),
     advanced_env: bool,
     any_build_script_metadata: bool = ("Allow any build script to specify env vars via cargo::metadata=key=value"),
     avoid_dev_deps: bool = ("Avoid installing dev-dependencies if possible"),
@@ -1412,6 +1413,7 @@ impl CliUnstable {
 
             // Unstable features
             // Sorted alphabetically:
+            "active-artifacts" => self.active_artifacts = parse_empty(k, v)?,
             "advanced-env" => self.advanced_env = parse_empty(k, v)?,
             "any-build-script-metadata" => self.any_build_script_metadata = parse_empty(k, v)?,
             "avoid-dev-deps" => self.avoid_dev_deps = parse_empty(k, v)?,
