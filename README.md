@@ -1,3 +1,9 @@
+## Active configuration artifact retention
+
+Read [the experimental feature and results](TARGET-SIZE.md).
+
+---
+
 # Cargo
 
 Cargo downloads your Rust project’s dependencies and compiles your project.
